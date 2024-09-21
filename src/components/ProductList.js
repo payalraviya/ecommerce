@@ -131,44 +131,51 @@ const ProductList = () => {
       {selectedProducts.map((selection, index) => (
         <div key={index} className="mb-3 border p-3 rounded">
           <div className="d-flex align-items-center">
-            <input
-              type="text"
-              value={selection.product ? `${selection.product.title}` : ''}
-              placeholder="Select a product"
-              readOnly
-              className="form-control me-2"
-            />
-            <button className="btn btn-primary me-2" onClick={() => handleShowModal(index)}>Edit</button>
-            <button className="btn btn-danger me-2" onClick={() => removeProduct(index)}>Remove</button>
+            <div className="flex-grow-1 position-relative">
+              <input
+                type="text"
+                value={selection.product ? `${selection.product.title}` : ''}
+                placeholder="Select a product"
+                readOnly
+                className="form-control me-2"
+              />
+              <button className="btn btn-link position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }} onClick={() => handleShowModal(index)}>
+                <i class="fa-solid fa-pen"></i> {/* Edit icon */}
+              </button>
+            </div>
+            
             {!showDiscount[index] && (
               <button
-                className="btn btn-success"
+                className="btn btn-success mx-2"
                 onClick={() => handleDiscountVisibility(index)}
               >
                 Add Discount
               </button>
             )}
-          {showDiscount[index] && (
-            <div className="d-flex align-items-center mt-2">
-              <div className="d-flex align-items-center ms-3">
-                <input
-                  type="number"
-                  placeholder="Discount"
-                  value={productDiscounts[index]?.value || ''}
-                  onChange={(e) => handleDiscountChange(index, e.target.value)}
-                  className="form-control me-2"
-                />
-                <select
-                  value={productDiscounts[index]?.type || 'flat'}
-                  onChange={(e) => handleDiscountTypeChange(index, e.target.value)}
-                  className="form-select"
-                >
-                  <option value="flat">Flat Off</option>
-                  <option value="%">Percentage Off</option>
-                </select>
+            {showDiscount[index] && (
+              <div className="d-flex align-items-center mt-2">
+                <div className="d-flex align-items-center ms-3">
+                  <input
+                    type="number"
+                    placeholder="Discount"
+                    value={productDiscounts[index]?.value || ''}
+                    onChange={(e) => handleDiscountChange(index, e.target.value)}
+                    className="form-control me-2"
+                  />
+                  <select
+                    value={productDiscounts[index]?.type || 'flat'}
+                    onChange={(e) => handleDiscountTypeChange(index, e.target.value)}
+                    className="form-select"
+                  >
+                    <option value="flat">Flat Off</option>
+                    <option value="%">Percentage Off</option>
+                  </select>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+            <button className="btn btn-link" onClick={() => removeProduct(index)} style={{ fontSize: '1.5rem', lineHeight: '1' }}>
+              <i className="fa-solid fa-times"></i> {/* Remove icon */}
+            </button>
           </div>
           <div className="align-items-center mt-3">
             <button className="btn btn-link" onClick={() => toggleShowVariants(index)}>
@@ -179,7 +186,7 @@ const ProductList = () => {
               <div key={variant.id} className="border p-2 mt-2 rounded w-100">
                 <div className="d-flex justify-content-between align-items-center">
                   <span>{variant.title} - ${variant.price}</span>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleToggleVariant(variant)}>Remove Variant</button>
+                  <button className="btn btn-link" onClick={() => handleToggleVariant(variant)}><i className="fa-solid fa-times"></i></button>
                 </div>
               </div>
             ))}
