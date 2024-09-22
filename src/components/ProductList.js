@@ -12,18 +12,22 @@ const ProductList = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [productDiscounts, setProductDiscounts] = useState({});
-  const [showDiscount, setShowDiscount] = useState({}); // State to manage discount visibility
+  const [showDiscount, setShowDiscount] = useState({});
 
-  const fetchProducts = async (query = '') => {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchProducts = async (query = '', page = 1, limit = 10) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://stageapi.monkcommerce.app/task/products/search?search=${query}`,
+        `https://stageapi.monkcommerce.app/task/products/search?search=${query}&page=${page}&limit=${limit}`,
         {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': '72njgfa948d9aS7gs5',  // Your API Key here
+            'x-api-key': '72njgfa948d9aS7gs5', // Your API Key here
           },
         }
       );
@@ -33,7 +37,8 @@ const ProductList = () => {
       }
 
       const data = await response.json();
-      setProducts(data);
+      setProducts(data || []); // Set products to an empty array if undefined
+      setTotalPages(data.totalPages || 7); // Ensure totalPages is set correctly
     } catch (err) {
       setError('Error fetching products');
     } finally {
@@ -45,7 +50,8 @@ const ProductList = () => {
     setSelectedProduct(null);
     setSelectedVariants([]);
     setShowModal(true);
-    fetchProducts(); // Fetch products when the modal is opened
+    setCurrentPage(1);
+    fetchProducts(searchQuery, 1); // Fetch products when the modal is opened
   };
 
   const addRow = () => {
@@ -88,7 +94,8 @@ const ProductList = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    fetchProducts(e.target.value); // Fetch products based on search input
+    setCurrentPage(1);
+    fetchProducts(e.target.value, 1);
   };
 
   const handleDiscountChange = (index, value) => {
@@ -111,13 +118,11 @@ const ProductList = () => {
     }));
   };
 
-  // Remove selected product from the list
   const removeProduct = (index) => {
     const updatedProducts = selectedProducts.filter((_, i) => i !== index);
     setSelectedProducts(updatedProducts);
   };
 
-  // Toggle visibility of the discount section
   const handleDiscountVisibility = (index) => {
     setShowDiscount((prev) => ({
       ...prev,
@@ -125,13 +130,30 @@ const ProductList = () => {
     }));
   };
 
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      fetchProducts(searchQuery, nextPage);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      const prevPage = currentPage - 1;
+      setCurrentPage(prevPage);
+      fetchProducts(searchQuery, prevPage);
+    }
+  };
+
   return (
     <div className='mt-5'>
       <h2 className="mb-4">Add Products</h2>
       {selectedProducts.map((selection, index) => (
-        <div key={index} className="mb-3 border p-3 rounded">
+        <div key={index} className="mb-3 p-3">
           <div className="d-flex align-items-center">
-            <div className="flex-grow-1 position-relative">
+            {index + 1}.
+            <div className="flex-grow-1 mx-2 position-relative" style={{ width: '95%' }}>
               <input
                 type="text"
                 value={selection.product ? `${selection.product.title}` : ''}
@@ -140,10 +162,10 @@ const ProductList = () => {
                 className="form-control me-2"
               />
               <button className="btn btn-link position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }} onClick={() => handleShowModal(index)}>
-                <i class="fa-solid fa-pen"></i> {/* Edit icon */}
+                <i className="fa-solid fa-pen"></i> {/* Edit icon */}
               </button>
             </div>
-            
+
             {!showDiscount[index] && (
               <button
                 className="btn btn-success mx-2"
@@ -168,7 +190,7 @@ const ProductList = () => {
                     className="form-select"
                   >
                     <option value="flat">Flat Off</option>
-                    <option value="%">Percentage Off</option>
+                    <option value="%">% Off</option>
                   </select>
                 </div>
               </div>
@@ -178,18 +200,50 @@ const ProductList = () => {
             </button>
           </div>
           <div className="align-items-center mt-3">
-            <button className="btn btn-link" onClick={() => toggleShowVariants(index)}>
-              {showVariants[index] ? "Hide Variants" : "Show Variants"}
-            </button>
-
-            {showVariants[index] && selection.variants.length > 0 && selection.variants.map((variant) => (
-              <div key={variant.id} className="border p-2 mt-2 rounded w-100">
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>{variant.title} - ${variant.price}</span>
-                  <button className="btn btn-link" onClick={() => handleToggleVariant(variant)}><i className="fa-solid fa-times"></i></button>
+            <div className='text-end'>
+              <button className="btn btn-link" onClick={() => toggleShowVariants(index)}>
+                {showVariants[index] ? "Hide Variants" : "Show Variants"}
+              </button>
+            </div>
+            <div className='text-end'>
+              {showVariants[index] && selection.variants.length > 0 && selection.variants.map((variant) => (
+                <div key={variant.id} className="p-2 mt-2">
+                  <div className="d-flex align-items-center ms-3">
+                    <div className="flex-grow-1 d-flex mx-2 ms-5 position-relative">
+                      <input
+                        type="text"
+                        value={variant.title}
+                        placeholder="Select a product"
+                        readOnly
+                        className="form-control me-2"
+                      />
+                      {showDiscount[index] && (
+                        <div className="d-flex align-items-center mt-2">
+                          <div className="d-flex align-items-center ms-3">
+                            <input
+                              type="number"
+                              placeholder="Discount"
+                              value={productDiscounts[index]?.value || ''}
+                              onChange={(e) => handleDiscountChange(index, e.target.value)}
+                              className="form-control me-2"
+                            />
+                            <select
+                              value={productDiscounts[index]?.type || 'flat'}
+                              onChange={(e) => handleDiscountTypeChange(index, e.target.value)}
+                              className="form-select"
+                            >
+                              <option value="flat">Flat Off</option>
+                              <option value="%">% Off</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                      <button className="btn btn-link" onClick={() => handleToggleVariant(variant)}><i className="fa-solid fa-times"></i></button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       ))}
@@ -209,35 +263,61 @@ const ProductList = () => {
           />
 
           {loading ? (
-            <p>Loading...</p>
+            <div className="text-center">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
           ) : error ? (
             <p>{error}</p>
           ) : (
-            products.map((product) => (
-              <div key={product.id} className="border p-2 mb-2 rounded">
-                <h5>{product.title}</h5>
-                <input
-                  type="radio"
-                  name="product"
-                  checked={selectedProduct && selectedProduct.id === product.id}
-                  onChange={() => handleSelectProduct(product)}
-                />
-                {selectedProduct && selectedProduct.id === product.id && (
-                  <div className="mt-2">
-                    {product.variants.map((variant) => (
-                      <div key={variant.id} className="d-flex align-items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedVariants.some((v) => v.id === variant.id)}
-                          onChange={() => handleToggleVariant(variant)}
-                        />
-                        <label className="ms-2">{variant.title} - ${variant.price}</label>
-                      </div>
-                    ))}
+            <>
+              {products.map((product) => (
+                <div key={product.id} className="p-2 mb-2">
+                  <div className='d-flex'>
+                    <input
+                      type="checkbox"
+                      name="product"
+                      checked={selectedProduct && selectedProduct.id === product.id}
+                      onChange={() => handleSelectProduct(product)}
+                    />
+                    <h5 className='mx-2'>{product.title}</h5>
                   </div>
-                )}
+                  {selectedProduct && selectedProduct.id === product.id && (
+                    <div className="mt-2 ms-5">
+                      {product.variants.map((variant) => (
+                        <div key={variant.id} className="d-flex align-items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedVariants.some((v) => v.id === variant.id)}
+                            onChange={() => handleToggleVariant(variant)}
+                          />
+                          <label className="ms-2">{variant.title} - ${variant.price}</label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {/* Pagination Controls */}
+              <div className="d-flex justify-content-between mt-3">
+                <Button
+                  variant="secondary"
+                  disabled={currentPage === 1}
+                  onClick={handlePreviousPage}
+                >
+                  Previous
+                </Button>
+                <span>Page {currentPage} of {totalPages}</span>
+                <Button
+                  variant="secondary"
+                  disabled={currentPage === totalPages}
+                  onClick={handleNextPage}
+                >
+                  Next
+                </Button>
               </div>
-            ))
+            </>
           )}
         </Modal.Body>
         <Modal.Footer>
