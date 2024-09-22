@@ -38,8 +38,8 @@ const ProductList = () => {
       }
 
       const data = await response.json();
-      setProducts(data || []); 
-      setTotalPages(data.totalPages || 7); 
+      setProducts(data || []);
+      setTotalPages(data.totalPages || 7);
     } catch (err) {
       setError('Error fetching products');
     } finally {
@@ -193,11 +193,20 @@ const ProductList = () => {
 
   return (
     <div className='mt-5 px-5 mx-5 container'>
+      <div className='px-5 mx-5'>
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="products">
           {(provided) => (
             <div {...provided.droppableProps} ref={provided.innerRef}>
               <h2 className="mb-4">Add Products</h2>
+                  <div className='row ms-5'>
+                    <div className='col-6 text-center'>
+                      <h4>Product</h4>
+                    </div>
+                    <div className='col-6 text-center'>
+                      <h4>Discount</h4>
+                    </div>
+                  </div>
               {selectedProducts.map((selection, index) => (
                 <Draggable key={index} draggableId={String(index)} index={index}>
                   {(provided) => (
@@ -271,7 +280,7 @@ const ProductList = () => {
                                   <Draggable key={variant.id} draggableId={String(variant.id)} index={variantIndex}>
                                     {(provided) => (
                                       <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="p-2 mt-2">
-                                        <div className="d-flex align-items-center ms-5 ms-3">
+                                        <div className="d-flex align-items-center ms-5">
                                           <i className="fa-solid fa-grip-vertical text-secondary mx-3"></i>
                                           <input
                                             type="text"
@@ -279,6 +288,7 @@ const ProductList = () => {
                                             placeholder="Select a product"
                                             readOnly
                                             className="form-control"
+                                            style={{borderRadius:'20px'}}
                                           />
                                           {showDiscount[index] && (
                                             <div className="d-flex align-items-center">
@@ -289,11 +299,13 @@ const ProductList = () => {
                                                   value={productDiscounts[index]?.value || ''}
                                                   onChange={(e) => handleDiscountChange(index, e.target.value)}
                                                   className="form-control me-2"
+                                                  style={{borderRadius:'20px'}}
                                                 />
                                                 <select
                                                   value={productDiscounts[index]?.type || '%'}
                                                   onChange={(e) => handleDiscountTypeChange(index, e.target.value)}
                                                   className="form-select"
+                                                  style={{borderRadius:'20px'}}
                                                 >
                                                   <option value="%">% Off</option>
                                                   <option value="flat">Flat Off</option>
@@ -401,6 +413,7 @@ const ProductList = () => {
           <button className='btn btn-outline-success px-5 py-3' onClick={addRow}>Add Product</button>
         </div>
       </DragDropContext>
+      </div>
     </div>
   );
 };
