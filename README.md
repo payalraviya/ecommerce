@@ -2,10 +2,18 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+## To run project
+
+### first clone repo
 
 ```
 git@github.com:payalraviya/ecommerce.git
+```
+
+### then copy .env
+
+```
+$ cp .env.example .env
 ```
 
 In the project directory, you can run:

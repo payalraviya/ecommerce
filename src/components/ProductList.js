@@ -18,6 +18,7 @@ const ProductList = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const apiKey = process.env.REACT_APP_API_KEY;
 
   const fetchProducts = async (query = '', page = 1, limit = 10) => {
     setLoading(true);
@@ -28,7 +29,7 @@ const ProductList = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': '72njgfa948d9aS7gs5', // Your API Key here
+            'x-api-key': `${apiKey}`, // Your API Key here
           },
         }
       );
