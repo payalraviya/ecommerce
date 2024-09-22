@@ -75,12 +75,21 @@ const ProductList = () => {
 
   const handleSelectProduct = (product) => {
     setSelectedProduct(product);
-    setSelectedVariants([]);
+    // Automatically select all variants of the selected product
+    setSelectedVariants(product.variants);
   };
 
-  const handleToggleVariant = (variant) => {
-    if (selectedVariants.includes(variant)) {
-      setSelectedVariants(selectedVariants.filter((v) => v.id !== variant.id));
+  const handleToggleVariant = (product, variant) => {
+    // Toggle variant selection
+    const updatedVariants = selectedVariants.includes(variant)
+      ? selectedVariants.filter((v) => v.id !== variant.id)
+      : [...selectedVariants, variant];
+
+    setSelectedVariants(updatedVariants);
+
+    // Automatically select the product if any variant is selected
+    if (updatedVariants.length > 0) {
+      setSelectedProduct(product); // Assuming variant.product is the product object
     } else {
       setSelectedVariants([...selectedVariants, variant]);
     }
@@ -180,7 +189,7 @@ const ProductList = () => {
 
     updatedProducts[productIndex].variants = reorderedVariants;
     setSelectedProducts(updatedProducts);
-};
+  };
 
   return (
     <div className='mt-5 px-5 mx-5 container'>
@@ -232,8 +241,8 @@ const ProductList = () => {
                                 onChange={(e) => handleDiscountTypeChange(index, e.target.value)}
                                 className="form-select"
                               >
-                                <option value="flat">Flat Off</option>
                                 <option value="%">% Off</option>
+                                <option value="flat">Flat Off</option>
                               </select>
                             </div>
                           </div>
@@ -251,55 +260,55 @@ const ProductList = () => {
                       </div>
 
                       <DragDropContext onDragEnd={handleVariantDragEnd(index)}>
-                      <Droppable droppableId={`variants-${index}`}>
-                        {(provided) => (
-                          <div ref={provided.innerRef} {...provided.droppableProps}>
-                            {showVariants[index] && selection.variants.length > 0 && selection.variants.map((variant, variantIndex) => (
-                              <Draggable key={variant.id} draggableId={String(variant.id)} index={variantIndex}>
-                                {(provided) => (
-                                  <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="p-2 mt-2">
-                                    <div className="d-flex align-items-center ms-5 ms-3">
-                                    <i className="fa-solid fa-grip-vertical text-secondary mx-3"></i>
-                                      <input
-                                        type="text"
-                                        value={variant.title}
-                                        placeholder="Select a product"
-                                        readOnly
-                                        className="form-control"
-                                      />
-                                      {showDiscount[index] && (
-                                        <div className="d-flex align-items-center">
-                                          <div className="d-flex align-items-center ms-3">
-                                            <input
-                                              type="number"
-                                              placeholder="Discount"
-                                              value={productDiscounts[index]?.value || ''}
-                                              onChange={(e) => handleDiscountChange(index, e.target.value)}
-                                              className="form-control me-2"
-                                            />
-                                            <select
-                                              value={productDiscounts[index]?.type || 'flat'}
-                                              onChange={(e) => handleDiscountTypeChange(index, e.target.value)}
-                                              className="form-select"
-                                            >
-                                              <option value="%">% Off</option>
-                                              <option value="flat">Flat Off</option>
-                                            </select>
+                        <Droppable droppableId={`variants-${index}`}>
+                          {(provided) => (
+                            <div ref={provided.innerRef} {...provided.droppableProps}>
+                              {showVariants[index] && selection.variants.length > 0 && selection.variants.map((variant, variantIndex) => (
+                                <Draggable key={variant.id} draggableId={String(variant.id)} index={variantIndex}>
+                                  {(provided) => (
+                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="p-2 mt-2">
+                                      <div className="d-flex align-items-center ms-5 ms-3">
+                                        <i className="fa-solid fa-grip-vertical text-secondary mx-3"></i>
+                                        <input
+                                          type="text"
+                                          value={variant.title}
+                                          placeholder="Select a product"
+                                          readOnly
+                                          className="form-control"
+                                        />
+                                        {showDiscount[index] && (
+                                          <div className="d-flex align-items-center">
+                                            <div className="d-flex align-items-center ms-3">
+                                              <input
+                                                type="number"
+                                                placeholder="Discount"
+                                                value={productDiscounts[index]?.value || ''}
+                                                onChange={(e) => handleDiscountChange(index, e.target.value)}
+                                                className="form-control me-2"
+                                              />
+                                              <select
+                                                value={productDiscounts[index]?.type || 'flat'}
+                                                onChange={(e) => handleDiscountTypeChange(index, e.target.value)}
+                                                className="form-select"
+                                              >
+                                                <option value="%">% Off</option>
+                                                <option value="flat">Flat Off</option>
+                                              </select>
+                                            </div>
                                           </div>
-                                        </div>
-                                      )}
-                                      <button className="btn btn-link" onClick={() => removeVariant(selection, variant)}>
-                                        <i className="fa-solid fa-times text-secondary"></i>
-                                      </button>
+                                        )}
+                                        <button className="btn btn-link" onClick={() => removeVariant(selection, variant)}>
+                                          <i className="fa-solid fa-times text-secondary"></i>
+                                        </button>
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))}
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
                       </DragDropContext>
 
                     </div>
@@ -340,7 +349,7 @@ const ProductList = () => {
                         type="checkbox"
                         name="product"
                         checked={selectedProduct && selectedProduct.id === product.id}
-                        onChange={() => handleSelectProduct(product)}
+                        onChange={() => handleSelectProduct(product)} // This now selects all variants
                       />
                       <h5 className='mx-2'>{product.title}</h5>
                     </div>
@@ -350,7 +359,7 @@ const ProductList = () => {
                           <input
                             type="checkbox"
                             checked={selectedVariants.some((v) => v.id === variant.id)}
-                            onChange={() => handleToggleVariant(variant)}
+                            onChange={() => handleToggleVariant(product, variant)} // This will now select the product as well
                           />
                           <label className="ms-2">{variant.title} - ${variant.price}</label>
                         </div>
@@ -366,7 +375,7 @@ const ProductList = () => {
                   >
                     Previous
                   </Button>
-                  <span>Page {currentPage} of {totalPages}</span>
+                  {/* <span>Page {currentPage} of {totalPages}</span> */}
                   <Button
                     variant="secondary"
                     disabled={currentPage === totalPages}
